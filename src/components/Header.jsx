@@ -22,11 +22,6 @@ export default function Header() {
 
   return (
     <header className="ledger-header">
-      <div className="ledger-mark">
-        <span className="ledger-mark-tick" />
-        <span className="ledger-mark-text">Ledger</span>
-      </div>
-
       <div className="ledger-header-meta">
         <span className="ledger-greeting">{getGreeting(now.getHours())}</span>
         <span className="ledger-date">{dateLabel}</span>

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Header from './components/Header.jsx'
-import BalanceHero from './components/BalanceHero.jsx'
-import AddEntryForm from './components/AddEntryForm.jsx'
-import CategoryBreakdown from './components/CategoryBreakdown.jsx'
-import PieChartCard from './components/PieChartCard.jsx'
-import TrendChartCard from './components/TrendChartCard.jsx'
-import TransactionTable from './components/TransactionTable.jsx'
+import Sidebar from './components/Sidebar.jsx'
+import Dashboard from './pages/Dashboard.jsx'
+import AddEntryPage from './pages/AddEntryPage.jsx'
+import TransactionsPage from './pages/TransactionsPage.jsx'
+import ReportsPage from './pages/ReportsPage.jsx'
 import { loadEntries, saveEntries } from './utils/storage.js'
 import './App.css'
 
@@ -35,31 +35,31 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
-      <Header />
+    <BrowserRouter>
+      <div className="app-shell">
+        <Sidebar />
 
-      <main className="app-main">
-        <BalanceHero totals={totals} />
+        <div className="app-body">
+          <Header />
 
-        <section className="grid-two">
-          <AddEntryForm onAdd={addEntry} />
-          <CategoryBreakdown entries={entries} totals={totals} />
-        </section>
+          <main className="app-main">
+            <Routes>
+              <Route path="/" element={<Dashboard entries={entries} totals={totals} />} />
+              <Route path="/add" element={<AddEntryPage onAdd={addEntry} />} />
+              <Route
+                path="/transactions"
+                element={<TransactionsPage entries={entries} onDelete={deleteEntry} />}
+              />
+              <Route path="/reports" element={<ReportsPage entries={entries} totals={totals} />} />
+            </Routes>
+          </main>
 
-        <section className="grid-two">
-          <PieChartCard entries={entries} />
-          <TrendChartCard entries={entries} />
-        </section>
-
-        <section>
-          <TransactionTable entries={entries} onDelete={deleteEntry} />
-        </section>
-      </main>
-
-      <footer className="app-footer">
-        <span>Ledger · Daily Expense Analytics</span>
-        <span>Your data stays on this device</span>
-      </footer>
-    </div>
+          <footer className="app-footer">
+            <span>Ledger · Daily Expense Analytics</span>
+            <span>Your data stays on this device</span>
+          </footer>
+        </div>
+      </div>
+    </BrowserRouter>
   )
 }
