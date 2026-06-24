@@ -34,7 +34,7 @@ export default function Sidebar() {
       </ul>
 
       <div className="sidebar-foot">
-        <span>v1.0 · local data</span>
+        <span>Expense data</span>
       </div>
     </nav>
   )
