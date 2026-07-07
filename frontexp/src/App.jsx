@@ -9,43 +9,32 @@ import ReportsPage from './pages/ReportsPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
 import RegisterPage from './pages/RegisterPage.jsx'
 import SettingsPage from './pages/SettingsPage.jsx'
-import {
-  loadAuth,
-  saveAuth,
-  clearAuth,
-  fetchEntries,
-  createEntryRequest,
-  deleteEntryRequest
-} from './utils/api.js'
 import './App.css'
 
-function ProtectedRoute({ user, children }) {
-  if (!user) {
-    return <Navigate to="/login" replace />
-  }
+// ALWAYS PERMIT ROUTING ACCESS
+function ProtectedRoute({ children }) {
   return children
 }
 
 export default function App() {
-  const [auth, setAuth] = useState(() => loadAuth())
-  const [entries, setEntries] = useState([])
+  // Mock a user session right out of the box
+  const [auth, setAuth] = useState({
+    user: { name: 'Guest User', email: 'guest@example.com' },
+    token: 'mock-local-token'
+  })
+
+  // Pre-populate with realistic mock entries so graphs and tables render beautifully
+  const [entries, setEntries] = useState([
+    { _id: '1', title: 'Salary Credit', amount: 5000, type: 'income', category: 'Salary', date: '2026-07-01' },
+    { _id: '2', title: 'Supermarket Groceries', amount: 150, type: 'expense', category: 'Food', date: '2026-07-02' },
+    { _id: '3', title: 'Electric Bill', amount: 85, type: 'expense', category: 'Utilities', date: '2026-07-04' },
+    { _id: '4', title: 'Freelance Design', amount: 650, type: 'income', category: 'Freelance', date: '2026-07-05' },
+    { _id: '5', title: 'Coffee & Snacks', amount: 12, type: 'expense', category: 'Food', date: '2026-07-06' }
+  ])
+
   const user = auth?.user
 
-  useEffect(() => {
-    if (!auth?.token) {
-      setEntries([])
-      return
-    }
-
-    fetchEntries()
-      .then((data) => setEntries(data))
-      .catch((error) => {
-        if (error.status === 401) {
-          handleLogout()
-        }
-      })
-  }, [auth?.token])
-
+  // Calculate local totals dynamically based on our state arrays
   const totals = useMemo(() => {
     let income = 0
     let expense = 0
@@ -57,33 +46,27 @@ export default function App() {
   }, [entries])
 
   function handleLogin(user, token) {
-    const authState = { user, token }
-    saveAuth(authState)
-    setAuth(authState)
+    setAuth({ user, token })
   }
 
   function handleLogout() {
-    clearAuth()
     setAuth(null)
     setEntries([])
   }
 
+  // Intercept backend creation and handle it client-side inside the state
   async function handleAddEntry(entry) {
-    try {
-      const saved = await createEntryRequest(entry)
-      setEntries((prev) => [saved, ...prev])
-    } catch (error) {
-      console.error('Failed to add entry', error)
+    const mockSavedEntry = {
+      ...entry,
+      _id: String(Date.now()), // Generate a virtual ID timestamp
+      date: entry.date || new Date().toISOString().split('T')[0]
     }
+    setEntries((prev) => [mockSavedEntry, ...prev])
   }
 
+  // Intercept backend deletions and filter them locally from state array
   async function handleDeleteEntry(id) {
-    try {
-      await deleteEntryRequest(id)
-      setEntries((prev) => prev.filter((e) => e._id !== id && e.id !== id))
-    } catch (error) {
-      console.error('Failed to delete entry', error)
-    }
+    setEntries((prev) => prev.filter((e) => e._id !== id && e.id !== id))
   }
 
   return (
@@ -106,8 +89,8 @@ export default function App() {
               />
               <Route
                 path="/"
-                element={
-                  <ProtectedRoute user={user}>
+                element = {
+                  <ProtectedRoute>
                     <Dashboard entries={entries} totals={totals} />
                   </ProtectedRoute>
                 }
@@ -115,7 +98,7 @@ export default function App() {
               <Route
                 path="/add"
                 element={
-                  <ProtectedRoute user={user}>
+                  <ProtectedRoute>
                     <AddEntryPage onAdd={handleAddEntry} />
                   </ProtectedRoute>
                 }
@@ -123,7 +106,7 @@ export default function App() {
               <Route
                 path="/transactions"
                 element={
-                  <ProtectedRoute user={user}>
+                  <ProtectedRoute>
                     <TransactionsPage entries={entries} onDelete={handleDeleteEntry} />
                   </ProtectedRoute>
                 }
@@ -131,7 +114,7 @@ export default function App() {
               <Route
                 path="/reports"
                 element={
-                  <ProtectedRoute user={user}>
+                  <ProtectedRoute>
                     <ReportsPage entries={entries} totals={totals} />
                   </ProtectedRoute>
                 }
@@ -139,7 +122,7 @@ export default function App() {
               <Route
                 path="/settings"
                 element={
-                  <ProtectedRoute user={user}>
+                  <ProtectedRoute>
                     <SettingsPage user={user} onLogout={handleLogout} />
                   </ProtectedRoute>
                 }
@@ -150,7 +133,7 @@ export default function App() {
 
           <footer className="app-footer">
             <span>Ledger · Daily Expense Analytics</span>
-            <span>{auth ? 'Synced with your account' : 'Sign in to save data securely'}</span>
+            <span>Standalone Demo Sandbox Mode</span>
           </footer>
         </div>
       </div>
